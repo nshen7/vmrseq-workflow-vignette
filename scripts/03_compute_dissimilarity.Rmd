@@ -1,0 +1,154 @@
+---
+title: "Downstream Analysis Following Applying vmrseq"
+author:
+- name: Ning Shen
+  affiliation: 
+  - Department of Statistics, University of British Columbia; 
+  - Centre for Molecular Medicine and Therapeutics, BC Children's Hospital Research Institute
+  email: ning.shen.wk@gmail.com
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: true
+    fig_width: 9
+    fig_height: 4.5
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "##"
+)
+```
+
+
+# Background
+
+In this vignette, we assume that scripts of the previous steps has been run, i.e.,
+
+- `01_run_vmrseq.R`: Apply vmrseq to the input dataset. The most important functions called in this script is `vmrseq.smooth` and `vmrseq.fit`, which are used to detect the VMRs from the input dataset.
+- `02_run_region_summary.R`: Summarize regional information. The most important function called in this script is `region.summary`, which provides total covered cells and methylated cells per regions, as well as regional average methylation.
+
+Feel free to check out the scripts! A brief instroduction of the input dataset can be found in the README of this repository.
+
+# Import the results from `vmrseq`
+
+We import the summarized regional information that are output by `02_run_region_summary.R`:
+```{r}
+regions.se <- HDF5Array::loadHDF5SummarizedExperiment(here::here("data", "02_run_region_summary", "vmrs_summary"))
+```
+
+We store the genomic coordinates in the object `regions.gr` and the regional average methylation matrix into object `MF` for further use.
+```{r}
+regions.gr <- GenomicRanges::granges(regions.se)
+MF <- SummarizedExperiment::assays(regions.se)$MF |> as.matrix()
+```
+
+# Gene / CpG context annotation
+
+```{r}
+genome(regions.gr) <- "mm10"
+```
+
+## Util functions
+
+```{r}
+getRandomizedAnnotation <- function(regions, annotations) {
+  
+  # Generate random regions with the same widths and chromosomes as our regions of interest
+  set.seed(100)
+  rand_regions <- annotatr::randomize_regions(
+    regions = regions,
+    allow.overlaps = TRUE,
+    per.chromosome = TRUE)
+  
+  # Annotate the random regions using the same annotations as above
+  rand_annt <- annotatr::annotate_regions(
+    regions = rand_regions,
+    annotations = annotations,
+    ignore.strand = TRUE,
+    quiet = TRUE)
+  
+  return(rand_annt)
+}
+
+plotAnnotations <- function(regions, annotations, plot_title) {
+  
+  ## Obtain annotations for the regions of interest 
+  region_annt <- annotatr::annotate_regions(
+    regions = regions,
+    annotations = annotations,
+    ignore.strand = TRUE,
+    quiet = FALSE
+  ) %>% data.frame()
+  
+  ## Obtain annotations for randomized regions 
+  random_annt <- getRandomizedAnnotation(regions = regions, annotations = annotations)
+  
+  # Plot the comparison of gene context between our regions of interest and random regions
+  annotatr::plot_annotation(
+    annotated_regions = region_annt,
+    annotated_random = random_annt,
+    annotation_order = unique(annotations$type),
+    plot_title = plot_title,
+    x_label = 'Annotations',
+    y_label = 'Count')
+}
+```
+
+
+## Gene annotation
+
+```{r}
+types_gene <- grep("mm10_genes.*", annotatr::builtin_annotations(), value = T)
+annt_genes <- annotatr::build_annotations(genome = 'mm10', annotations = types_gene)
+```
+
+```{r}
+plotAnnotations(regions = regions.gr, annotations = annt_genes, plot_title = "Gene Context Annotation of VMRs")
+```
+
+## CpG annotation
+
+```{r}
+types_cpg <- "mm10_cpgs"
+annt_cpgs <- build_annotations(genome = 'mm10', annotations = types_cpg)
+```
+
+```{r}
+plotAnnotations(regions = regions.gr, annotations = annt_genes, plot_title = "CpG Context Annotation of VMRs")
+```
+
+
+# Clustering analysis
+
+
+## Compute cell-to-cell dissimilarity distance matrix
+
+```{r}
+d_mat <- cluster::daisy(t(MF), metric = 'manhattan', stand = FALSE, warnBin = FALSE) |> as.matrix()
+```
+
+
+## Cluster with UMAP
+
+Then, UMAP coordinates of the cells were computed using the `umap` function from package `uwot`:
+```{r}
+umap.df <- uwot::umap(d_mat %>% as("sparseMatrix"), n_neighbors = 15, n_components = 2) |>
+  as.data.frame(col.names = c('UMAP 1', 'UMAP 2'))
+```
+
+We plot the cells with the UMAP coords in the following figure. However, since cells in the toy dataset were not simulated to belong to specific cell clusters, we shall not expect to see seperable clusters in the UMAP plot.
+```{r}
+plot.df <- cbind(umap.df, as.data.frame(colData(regions.se)))
+as.data.frame(umap) %>%
+  ggplot(aes(V1, V2)) +
+  geom_point() +
+  theme_classic() +
+  xlab('UMAP 1') +
+  ylab('UMAP 2')
+```
+
+
