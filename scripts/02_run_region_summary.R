@@ -25,6 +25,7 @@ fit <- readRDS(here(read_dir, "vmrseq_results.rds"))
 
 ## Summary regional info
 regions.se <- region.summary(SE = SE, region_ranges = fit$vmr.ranges)
+colData(regions.se) <- cbind(colData(regions.se), colData(SE))
 
 ## Save regional info
 saveHDF5SummarizedExperiment(regions.se, here(write_dir, "vmrs_summary"), replace = T)

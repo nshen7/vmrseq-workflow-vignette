@@ -49,7 +49,7 @@ MF <- SummarizedExperiment::assays(regions.se)$MF |> as.matrix()
 # Gene / CpG context annotation
 
 ```{r}
-genome(regions.gr) <- "mm10"
+GenomeInfoDb::genome(regions.gr) <- "mm10"
 ```
 
 ## Util functions
@@ -136,19 +136,17 @@ d_mat <- cluster::daisy(t(MF), metric = 'manhattan', stand = FALSE, warnBin = FA
 
 Then, UMAP coordinates of the cells were computed using the `umap` function from package `uwot`:
 ```{r}
-umap.df <- uwot::umap(d_mat %>% as("sparseMatrix"), n_neighbors = 15, n_components = 2) |>
+umap.df <- uwot::umap(d_mat |> as("sparseMatrix"), n_neighbors = 15, n_components = 2) |>
   as.data.frame(col.names = c('UMAP 1', 'UMAP 2'))
 ```
 
 We plot the cells with the UMAP coords in the following figure. However, since cells in the toy dataset were not simulated to belong to specific cell clusters, we shall not expect to see seperable clusters in the UMAP plot.
 ```{r}
-plot.df <- cbind(umap.df, as.data.frame(colData(regions.se)))
-as.data.frame(umap) %>%
-  ggplot(aes(V1, V2)) +
+plot.df <- cbind(umap.df, as.data.frame(SummarizedExperiment::colData(regions.se)))
+plot.df |>
+  ggplot(aes(`UMAP 1`, `UMAP 2`, color = )) +
   geom_point() +
-  theme_classic() +
-  xlab('UMAP 1') +
-  ylab('UMAP 2')
+  theme_classic() 
 ```
 
 
