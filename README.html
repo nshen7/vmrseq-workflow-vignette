@@ -352,11 +352,67 @@ display: none;
 </div>
 
 
-<div id="vmrseq-workflow-vignette" class="section level1">
-<h1>vmrseq-workflow-vignette</h1>
+<div id="an-example-workflow-of-single-cell-bisulfite-sequencing-data-analysis" class="section level1">
+<h1>An Example Workflow of Single-cell Bisulfite Sequencing Data
+Analysis</h1>
 <p>This is an auxillary repository that demonstrate a workflow that
 analyzes a real-world dataset using <a href="https://github.com/nshen7/vmrseq">the <code>vmrseq</code>
 package</a>.</p>
+<div id="dataset" class="section level2">
+<h2>Dataset</h2>
+<p>We took <strong>chromosome 1</strong> of a subset of the single-cell
+bisulfite sequencing data published in Luo et al [1] as the example
+dataset in this repository. Specifically, we took cells from 4 subtypes:
+the <em>excitatory</em> subtype <em>mDL-2</em> and <em>inhibitory</em>
+subtypes <em>mPv</em>, <em>mSst-1</em> and <em>mSst-2</em>. The CpG
+methylation levels of these files has been packed up into a
+<code>SummarizedExperiment</code> object (stored in
+<code>data/example/chr1</code>) using <code>data.pool</code> function in
+the <code>vmrseq</code> package.</p>
+</div>
+<div id="workflow" class="section level2">
+<h2>Workflow</h2>
+<p>We have organized the scripts into the order of the analysis pipeline
+in the <code>scripts/</code> folder：</p>
+<ul>
+<li><code>01_run_vmrseq</code>: apply the vmrseq methodology to the
+example dataset.</li>
+<li><code>02_run_region_summary</code>: summarize the regional
+methylation information per cell on detected VMRs.</li>
+<li><code>03_downstream_analysis</code>: downstream analysis including
+gene/CpG context annotation and unsupervised cell clustering.</li>
+</ul>
+<p><strong>Important note:</strong> We STRONGLY recommend the user to
+use high-performance computing to run this workflow on large-scale
+single-cell datasets (e.g., &gt; 500 cells) due to the extensive demand
+on memory and parallelism.</p>
+</div>
+<div id="required-packages" class="section level2">
+<h2>Required packages</h2>
+<p>These packages are required to run the scripts in this repo:</p>
+<pre class="r"><code># # install.packages(&quot;devtools&quot;)
+# # install.packages(&quot;BiocManager&quot;)
+#
+# devtools::install_github(&quot;nshen7/vmrseq&quot;)
+# BiocManager::install(&quot;here&quot;)
+# BiocManager::install(&quot;SummarizedExperiment&quot;)
+# BiocManager::install(&quot;HDF5Array&quot;)
+# BiocManager::install(&quot;BiocParallel&quot;)
+# BiocManager::install(&quot;annotatr&quot;)
+# BiocManager::install(&quot;TxDb.Mmusculus.UCSC.mm10.knownGene&quot;)
+# BiocManager::install(&quot;org.Mm.eg.db&quot;)
+#
+# install.packages(&quot;uwot&quot;)
+# install.packages(&quot;data.table&quot;)
+# install.packages(&quot;tidyverse&quot;)</code></pre>
+</div>
+<div id="citation" class="section level2">
+<h2>Citation</h2>
+<p>If you applied the functions in <code>vmrseq</code> package, please
+cite our paper:</p>
+<p>Ning Shen and Keegan Korthauer. 2023. “Vmrseq: Probabilistic Modeling
+of Single-Cell Methylation Heterogeneity.” bioRxiv. <a href="https://doi.org/10.1101/2023.11.20.567911">https://doi.org/10.1101/2023.11.20.567911</a>.</p>
+</div>
 </div>
 
 

@@ -48,12 +48,11 @@ MF <- SummarizedExperiment::assays(regions.se)$MF |> as.matrix()
 
 # Gene / CpG context annotation
 
-```{r}
-GenomeInfoDb::genome(regions.gr) <- "mm10"
-```
+Genomic regions resulting from next-generation sequencing experiments and bioinformatics pipelines are more meaningful when annotated to genomic features. Using the `annotatr` package, we are able to examine which genomic features our regions of interest (i.e., VMRs in this example) are enriched in. 
 
 ## Util functions
 
+These are the wrapper functions that will be used to generate annotation figures:
 ```{r}
 getRandomizedAnnotation <- function(regions, annotations) {
   
@@ -82,7 +81,7 @@ plotAnnotations <- function(regions, annotations, plot_title) {
     annotations = annotations,
     ignore.strand = TRUE,
     quiet = FALSE
-  ) %>% data.frame()
+  ) |> data.frame()
   
   ## Obtain annotations for randomized regions 
   random_annt <- getRandomizedAnnotation(regions = regions, annotations = annotations)
@@ -98,34 +97,46 @@ plotAnnotations <- function(regions, annotations, plot_title) {
 }
 ```
 
+Specify that our targeted genome assembly is "mm10":
+```{r}
+GenomeInfoDb::genome(regions.gr) <- "mm10"
+```
+
 
 ## Gene annotation
 
-```{r}
+Before annotating regions, they must be built with `build_annotations()` with desired annotation codes.
+```{r message=FALSE}
 types_gene <- grep("mm10_genes.*", annotatr::builtin_annotations(), value = T)
 annt_genes <- annotatr::build_annotations(genome = 'mm10', annotations = types_gene)
 ```
 
+We plot the distribution of gene contexts that overlap with our VMRs (bars in black) against randomized regions with the same width as our VMRs (bars in grey). It may be observed that the VMRs selected by vmrseq slightly favors towards genic regions over intergenic ones.
 ```{r}
 plotAnnotations(regions = regions.gr, annotations = annt_genes, plot_title = "Gene Context Annotation of VMRs")
 ```
 
 ## CpG annotation
 
+Similar to gene context, we also plot the distribution of CpG contexts that overlap with our VMRs (bars in black) against randomized regions with the same width as our VMRs (bars in grey). 
+
 ```{r}
 types_cpg <- "mm10_cpgs"
-annt_cpgs <- build_annotations(genome = 'mm10', annotations = types_cpg)
+annt_cpgs <- annotatr::build_annotations(genome = 'mm10', annotations = types_cpg)
 ```
 
 ```{r}
-plotAnnotations(regions = regions.gr, annotations = annt_genes, plot_title = "CpG Context Annotation of VMRs")
+plotAnnotations(regions = regions.gr, annotations = annt_cpgs, plot_title = "CpG Context Annotation of VMRs")
 ```
 
 
-# Clustering analysis
+# Unsupervised cell clustering analysis
 
+In this section we demonstrate the procedure of an unsupervised cell clustering analysis using the detected VMRs, as similarly presented in the vmrseq paper. 
 
 ## Compute cell-to-cell dissimilarity distance matrix
+
+We first compute a cell-to-cell dissimilarity matrix based on the `MF` assay output by `region.summary`. The `daisy` function from `cluster` is used here for it allows NA values in its input.
 
 ```{r}
 d_mat <- cluster::daisy(t(MF), metric = 'manhattan', stand = FALSE, warnBin = FALSE) |> as.matrix()
@@ -136,16 +147,19 @@ d_mat <- cluster::daisy(t(MF), metric = 'manhattan', stand = FALSE, warnBin = FA
 
 Then, UMAP coordinates of the cells were computed using the `umap` function from package `uwot`:
 ```{r}
-umap.df <- uwot::umap(d_mat |> as("sparseMatrix"), n_neighbors = 15, n_components = 2) |>
-  as.data.frame(col.names = c('UMAP 1', 'UMAP 2'))
+umap.df <- uwot::umap(d_mat |> as("sparseMatrix"), n_neighbors = 15, n_components = 2) 
+colnames(umap.df) <- c('UMAP 1', 'UMAP 2')
 ```
 
-We plot the cells with the UMAP coords in the following figure. However, since cells in the toy dataset were not simulated to belong to specific cell clusters, we shall not expect to see seperable clusters in the UMAP plot.
+We plot the cells with the UMAP coordinates in the following figure. We may observe that the two broad classes are a primary source of heterogeneity in this example dataset, as they are far apart in terms of UMAP coords. The subtypes within those broad classes are also fairly separated, demonstrating that the VMRs detected by vmrseq has captures heterogeneity associated with the subtypes as well.
 ```{r}
+library(ggplot2)
+set.seed(2024)
 plot.df <- cbind(umap.df, as.data.frame(SummarizedExperiment::colData(regions.se)))
 plot.df |>
-  ggplot(aes(`UMAP 1`, `UMAP 2`, color = )) +
+  ggplot(aes(`UMAP 1`, `UMAP 2`, shape = broad_class, color = subtype)) +
   geom_point() +
+  scale_shape_manual(values = c(1, 2)) + 
   theme_classic() 
 ```
 
