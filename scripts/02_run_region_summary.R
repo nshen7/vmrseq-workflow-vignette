@@ -1,5 +1,4 @@
-# library(vmrseq)
-devtools::load_all("../vmrseq")
+library(vmrseq)
 library(here)
 library(SummarizedExperiment)
 library(HDF5Array)
