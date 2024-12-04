@@ -16,7 +16,10 @@ We have organized the scripts into the order of the analysis pipeline in the `sc
 - `02_run_region_summary`: summarize the regional methylation information per cell on detected VMRs.
 - `03_downstream_analysis`: downstream analysis including gene/CpG context annotation and unsupervised cell clustering.
 
-**Important note:** We STRONGLY recommend the user to use high-performance computing to run this workflow on large-scale single-cell datasets (e.g., > 500 cells) due to the extensive demand on memory and parallelism.
+**Important notes:** 
+
+- We strongly recommend the user to use **high-performance computing** to run this workflow on large-scale single-cell datasets (e.g., > 500 cells) due to the extensive demand on memory and parallelism. 
+- We also recommend to process **one chromosome at a time or in parallel** to facilitate a manageable computation time.
 
 ## Required packages
 
