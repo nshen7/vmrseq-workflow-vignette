@@ -21,8 +21,8 @@ total <- rowSums(assays(SE)[[1]] > 0)
 SE <- subset(SE, total >= 3)
 
 ## Run vmrseq
-gr <- vmrseq::vmrseq.smooth(SE)
-fit <- vmrseq::vmrseq.fit(gr, alpha = 0.05)
+gr <- vmrseq::vmrseqSmooth(SE)
+fit <- vmrseq::vmrseqFit(gr, alpha = 0.05)
 
 ## Save model output
 saveRDS(fit, here(write_dir, "vmrseq_results.rds"))

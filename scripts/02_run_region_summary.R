@@ -23,7 +23,7 @@ SE <- loadHDF5SummarizedExperiment(here("data", "example", "chr1"))
 fit <- readRDS(here(read_dir, "vmrseq_results.rds"))
 
 ## Summary regional info
-regions.se <- region.summary(SE = SE, region_ranges = fit$vmr.ranges)
+regions.se <- regionSummary(SE = SE, region_ranges = fit$vmr.ranges)
 colData(regions.se) <- cbind(colData(regions.se), colData(SE))
 
 ## Save regional info

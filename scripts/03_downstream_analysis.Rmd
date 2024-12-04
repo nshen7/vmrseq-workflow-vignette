@@ -28,8 +28,8 @@ knitr::opts_chunk$set(
 
 In this vignette, we assume that scripts of the previous steps has been run, i.e.,
 
-- `01_run_vmrseq.R`: Apply vmrseq to the input dataset. The most important functions called in this script is `vmrseq.smooth` and `vmrseq.fit`, which are used to detect the VMRs from the input dataset.
-- `02_run_region_summary.R`: Summarize regional information. The most important function called in this script is `region.summary`, which provides total covered cells and methylated cells per regions, as well as regional average methylation.
+- `01_run_vmrseq.R`: Apply vmrseq to the input dataset. The most important functions called in this script is `vmrseqSmooth` and `vmrseqFit`, which are used to detect the VMRs from the input dataset.
+- `02_run_region_summary.R`: Summarize regional information. The most important function called in this script is `regionSummary`, which provides total covered cells and methylated cells per regions, as well as regional average methylation.
 
 Feel free to check out the scripts! A brief instroduction of the input dataset can be found in the README of this repository.
 
